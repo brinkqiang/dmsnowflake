@@ -22,6 +22,7 @@
 #include "dmsnowflake.h"
 #include <chrono>
 #include <cassert>
+
 // the timestamp in milliseconds of the start of the custom epoch
 #define SNOWFLAKE_EPOCH 1388534400000 //Midnight January 1, 2014
 

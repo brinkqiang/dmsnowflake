@@ -60,7 +60,11 @@ static inline uint64_t DMGetTime() {
 class CDMIDGeneratorImpl
 {
 public:
-    CDMIDGeneratorImpl(int region_id, int worker_id) { snowflake_init(region_id, worker_id); }
+    CDMIDGeneratorImpl(int region_id, int worker_id) { 
+        std::lock_guard guard(m_oLock);
+        snowflake_init(region_id, worker_id);
+    }
+
     ~CDMIDGeneratorImpl() {}
 
     uint64_t GetNextID() {

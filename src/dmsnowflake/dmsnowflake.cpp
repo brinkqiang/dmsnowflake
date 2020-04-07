@@ -62,7 +62,7 @@ static inline uint64_t DMGetTime() {
 class CDMIDGeneratorImpl
 {
 public:
-    CDMIDGeneratorImpl() { snowflake_init(0, 0); }
+    CDMIDGeneratorImpl(int region_id, int worker_id) { snowflake_init(region_id, worker_id); }
     ~CDMIDGeneratorImpl() {}
 
     uint64_t GetNextID() {
@@ -139,8 +139,8 @@ private:
 };
 
 
-CDMIDGenerator::CDMIDGenerator()
-    : m_oImpl(new CDMIDGeneratorImpl())
+CDMIDGenerator::CDMIDGenerator(int region_id, int worker_id)
+    : m_oImpl(new CDMIDGeneratorImpl(region_id, worker_id))
 {
 
 }

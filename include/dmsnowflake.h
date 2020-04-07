@@ -30,7 +30,7 @@ class CDMIDGeneratorImpl;
 class CDMIDGenerator
 {
 public:
-	CDMIDGenerator();
+	CDMIDGenerator(int region_id = 0, int worker_id = 0);
 	~CDMIDGenerator();
 
 	uint64_t GetNextID();

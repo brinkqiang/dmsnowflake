@@ -66,6 +66,7 @@ public:
     ~CDMIDGeneratorImpl() {}
 
     uint64_t GetNextID() {
+        std::lock_guard guard(m_oLock);
         return snowflake_id();
     }
 
@@ -136,6 +137,7 @@ private:
 private:
     snowflake_state m_oSnowflakeGlobalState;
     app_stats       m_oAppStats;
+    std::mutex     m_oLock;
 };
 
 

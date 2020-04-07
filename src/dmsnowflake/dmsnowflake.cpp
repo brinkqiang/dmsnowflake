@@ -140,7 +140,7 @@ private:
 private:
     snowflake_state m_oSnowflakeGlobalState;
     app_stats       m_oAppStats;
-    std::mutex     m_oLock;
+    std::mutex      m_oLock;
 };
 
 

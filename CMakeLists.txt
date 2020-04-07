@@ -7,15 +7,6 @@ INCLUDE(cmake/ModuleImport.cmake)
 INCLUDE(cmake/ModuleCompileOptions.cmake)
 ModuleSetCompileOptions()
 
-SET(DMSNOWFLAKE_VERSION_MAJOR "1")
-SET(DMSNOWFLAKE_VERSION_MINOR "0")
-SET(DMSNOWFLAKE_VERSION_PATCH "1")
-SET(DMSNOWFLAKE_VERSION "${DMSNOWFLAKE_VERSION_MAJOR}.${DMSNOWFLAKE_VERSION_MINOR}.${DMSNOWFLAKE_VERSION_PATCH}")
-
-MESSAGE(STATUS "VERSION: ${DMSNOWFLAKE_VERSION}")
-
-OPTION(USE_DMSNOWFLAKE "use dmsnowflake" OFF)
-
 ModuleImport("dmtest" "thirdparty/dmtest")
 LibImport("dmsnowflake" "src/dmsnowflake")
 ExeImport("test" "dmsnowflake;dmtest")

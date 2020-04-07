@@ -22,7 +22,7 @@ Copyright (c) 2013-2018 brinkqiang (brink.qiang@gmail.com)
 [win-link]:  https://ci.appveyor.com/project/brinkqiang/dmsnowflake "AppVeyor build status"
 
 ## Intro
-dmsnowflake
+dmsnowflake based on snowflake4cxx
 ```cpp
 ```
 ## Contacts

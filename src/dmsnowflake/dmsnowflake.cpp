@@ -57,8 +57,6 @@ static inline uint64_t DMGetTime() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - SNOWFLAKE_EPOCH;
 }
 
-
-
 class CDMIDGeneratorImpl
 {
 public:

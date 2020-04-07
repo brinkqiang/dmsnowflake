@@ -15,7 +15,6 @@ SET(DMSNOWFLAKE_VERSION "${DMSNOWFLAKE_VERSION_MAJOR}.${DMSNOWFLAKE_VERSION_MINO
 MESSAGE(STATUS "VERSION: ${DMSNOWFLAKE_VERSION}")
 
 OPTION(USE_DMSNOWFLAKE "use dmsnowflake" OFF)
-CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/include/dmsnowflake_config.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/dmsnowflake_config.h)
 
 ModuleImport("dmtest" "thirdparty/dmtest")
 LibImport("dmsnowflake" "src/dmsnowflake")

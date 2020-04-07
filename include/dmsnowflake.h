@@ -25,14 +25,18 @@
 #include <stdint.h>
 #include <mutex>
 
-uint64_t snowflake_id();
-int snowflake_init(int region_id, int worker_id);
+class CDMIDGeneratorImpl;
 
 class CDMIDGenerator
 {
 public:
 	CDMIDGenerator();
 	~CDMIDGenerator();
+
+	uint64_t GetNextID();
+
+private:
+	std::unique_ptr< CDMIDGeneratorImpl> m_oImpl;
 };
 
 #endif // __DMSNOWFLAKE_H_INCLUDE__

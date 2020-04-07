@@ -21,7 +21,7 @@
 
 #include "dmsnowflake.h"
 #include <chrono>
-
+#include <cassert>
 // the timestamp in milliseconds of the start of the custom epoch
 #define SNOWFLAKE_EPOCH 1388534400000 //Midnight January 1, 2014
 
@@ -45,16 +45,16 @@ typedef struct _snowflake_state {
 typedef struct _app_stats {
     time_t started_at;
     char* version;
-    long int ids;
-    long int waits;
-    long int seq_max;
+    uint64_t ids;
+    uint64_t waits;
+    uint64_t seq_max;
     int region_id;
     int worker_id;
-    long int seq_cap;
+    uint64_t seq_cap;
 } app_stats;
 
-static inline uint64_t DMGetSeconds() {
-  return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+static inline uint64_t DMGetTime() {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - SNOWFLAKE_EPOCH;
 }
 
 
@@ -62,7 +62,7 @@ static inline uint64_t DMGetSeconds() {
 class CDMIDGeneratorImpl
 {
 public:
-    CDMIDGeneratorImpl() {}
+    CDMIDGeneratorImpl() { snowflake_init(0, 0); }
     ~CDMIDGeneratorImpl() {}
 
     uint64_t GetNextID() {
@@ -71,14 +71,14 @@ public:
 
 private:
     uint64_t snowflake_id() {
-        uint64_t millisecs = DMGetSeconds();
+        uint64_t millisecs = DMGetTime();
         uint64_t id = 0;
 
         // Catch NTP clock adjustment that rolls time backwards and sequence number overflow
         if ((m_oSnowflakeGlobalState.seq > m_oSnowflakeGlobalState.seq_max) || m_oSnowflakeGlobalState.time > millisecs) {
             ++m_oAppStats.waits;
             while (m_oSnowflakeGlobalState.time >= millisecs) {
-                millisecs = DMGetSeconds();
+                millisecs = DMGetTime();
             }
         }
 
@@ -102,14 +102,16 @@ private:
 
 
     int snowflake_init(int region_id, int worker_id) {
-        int max_region_id = (1 << SNOWFLAKE_REGIONID_BITS) - 1;
+        const int max_region_id = (1 << SNOWFLAKE_REGIONID_BITS) - 1;
         if (region_id < 0 || region_id > max_region_id) {
-            //printf("Region ID must be in the range : 0-%d\n", max_region_id);
+            printf("Region ID must be in the range : 0-%d\n", max_region_id);
+            assert(0);
             return -1;
         }
-        int max_worker_id = (1 << SNOWFLAKE_WORKERID_BITS) - 1;
+        const int max_worker_id = (1 << SNOWFLAKE_WORKERID_BITS) - 1;
         if (worker_id < 0 || worker_id > max_worker_id) {
-            //printf("Worker ID must be in the range: 0-%d\n", max_worker_id);
+            printf("Worker ID must be in the range: 0-%d\n", max_worker_id);
+            assert(0);
             return -1;
         }
 
@@ -140,6 +142,7 @@ private:
 CDMIDGenerator::CDMIDGenerator()
     : m_oImpl(new CDMIDGeneratorImpl())
 {
+
 }
 
 CDMIDGenerator::~CDMIDGenerator()
@@ -148,5 +151,5 @@ CDMIDGenerator::~CDMIDGenerator()
 
 uint64_t CDMIDGenerator::GetNextID()
 {
-    return m_oImpl.GetNextID();
+    return m_oImpl->GetNextID();
 }

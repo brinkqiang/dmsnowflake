@@ -20,51 +20,133 @@
 // SOFTWARE.
 
 #include "dmsnowflake.h"
-#include "dmos.h"
+#include <chrono>
 
-static inline uint32_t GetTickCount32() {
-    //auto now = std::chrono::system_clock::now();
-    //auto now = std::chrono::steady_clock::now();
-    //auto now = std::chrono::high_resolution_clock::now();
-    //return std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-#ifdef _MSC_VER
-    return ::GetTickCount();
-#else
-    struct timespec ts = { 0 };
-    clock_gettime(CLOCK_MONOTONIC, &ts);
-    return (ts.tv_sec * 1000 + ts.tv_nsec / 1000000);
-#endif
+// the timestamp in milliseconds of the start of the custom epoch
+#define SNOWFLAKE_EPOCH 1388534400000 //Midnight January 1, 2014
+
+#define SNOWFLAKE_TIME_BITS 41
+#define SNOWFLAKE_REGIONID_BITS 4
+#define SNOWFLAKE_WORKERID_BITS 10
+#define SNOWFLAKE_SEQUENCE_BITS 8
+
+typedef struct _snowflake_state {
+    // milliseconds since SNOWFLAKE_EPOCH
+    uint64_t time;
+    uint64_t seq_max;
+    uint64_t worker_id;
+    uint64_t region_id;
+    uint64_t seq;
+    uint64_t time_shift_bits;
+    uint64_t region_shift_bits;
+    uint64_t worker_shift_bits;
+} snowflake_state;
+
+typedef struct _app_stats {
+    time_t started_at;
+    char* version;
+    long int ids;
+    long int waits;
+    long int seq_max;
+    int region_id;
+    int worker_id;
+    long int seq_cap;
+} app_stats;
+
+static inline uint64_t DMGetSeconds() {
+  return std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
 
 
-uint64_t WaitUntilNextMillis(uint64_t last_timestamp) {
-    uint64_t timestamp = GetTickCount32();
-    while (timestamp <= last_timestamp) {
-        timestamp = GetTickCount32();
+
+class CDMIDGeneratorImpl
+{
+public:
+    CDMIDGeneratorImpl() {}
+    ~CDMIDGeneratorImpl() {}
+
+    uint64_t GetNextID() {
+        return snowflake_id();
     }
-    return timestamp;
-}
 
+private:
+    uint64_t snowflake_id() {
+        uint64_t millisecs = DMGetSeconds();
+        uint64_t id = 0;
 
-uint64_t IdWorkerUnThreadSafe::GetNextID() {
-    uint64_t timestamp = GetTickCount32();
-
-    // 在当前秒内
-    if (last_timestamp_ == timestamp) {
-        sequence_ = (sequence_ + 1) & 0xFFF;
-        if (sequence_ == 0) {
-            timestamp = WaitUntilNextMillis(last_timestamp_);
+        // Catch NTP clock adjustment that rolls time backwards and sequence number overflow
+        if ((m_oSnowflakeGlobalState.seq > m_oSnowflakeGlobalState.seq_max) || m_oSnowflakeGlobalState.time > millisecs) {
+            ++m_oAppStats.waits;
+            while (m_oSnowflakeGlobalState.time >= millisecs) {
+                millisecs = DMGetSeconds();
+            }
         }
-    }
-    else {
-        sequence_ = 0;
+
+        if (m_oSnowflakeGlobalState.time < millisecs) {
+            m_oSnowflakeGlobalState.time = millisecs;
+            m_oSnowflakeGlobalState.seq = 0L;
+        }
+
+
+        id = (millisecs << m_oSnowflakeGlobalState.time_shift_bits)
+            | (m_oSnowflakeGlobalState.region_id << m_oSnowflakeGlobalState.region_shift_bits)
+            | (m_oSnowflakeGlobalState.worker_id << m_oSnowflakeGlobalState.worker_shift_bits)
+            | (m_oSnowflakeGlobalState.seq++);
+
+        if (m_oAppStats.seq_max < m_oSnowflakeGlobalState.seq)
+            m_oAppStats.seq_max = m_oSnowflakeGlobalState.seq;
+
+        ++m_oAppStats.ids;
+        return id;
     }
 
-    last_timestamp_ = timestamp;
-    return ((timestamp & 0x1FFFFFF) << 22 |
-        (data_center_id_ & 0x1F) << 17 |
-        (worker_id_ & 0x1F) << 12 |
-        (sequence_ & 0xFFF));
 
+    int snowflake_init(int region_id, int worker_id) {
+        int max_region_id = (1 << SNOWFLAKE_REGIONID_BITS) - 1;
+        if (region_id < 0 || region_id > max_region_id) {
+            //printf("Region ID must be in the range : 0-%d\n", max_region_id);
+            return -1;
+        }
+        int max_worker_id = (1 << SNOWFLAKE_WORKERID_BITS) - 1;
+        if (worker_id < 0 || worker_id > max_worker_id) {
+            //printf("Worker ID must be in the range: 0-%d\n", max_worker_id);
+            return -1;
+        }
+
+        m_oSnowflakeGlobalState.time_shift_bits = SNOWFLAKE_REGIONID_BITS + SNOWFLAKE_WORKERID_BITS + SNOWFLAKE_SEQUENCE_BITS;
+        m_oSnowflakeGlobalState.region_shift_bits = SNOWFLAKE_WORKERID_BITS + SNOWFLAKE_SEQUENCE_BITS;
+        m_oSnowflakeGlobalState.worker_shift_bits = SNOWFLAKE_SEQUENCE_BITS;
+
+        m_oSnowflakeGlobalState.worker_id = worker_id;
+        m_oSnowflakeGlobalState.region_id = region_id;
+        m_oSnowflakeGlobalState.seq_max = (1L << SNOWFLAKE_SEQUENCE_BITS) - 1;
+        m_oSnowflakeGlobalState.seq = 0L;
+        m_oSnowflakeGlobalState.time = 0L;
+
+        m_oAppStats.seq_cap = m_oSnowflakeGlobalState.seq_max;
+        m_oAppStats.waits = 0L;
+        m_oAppStats.seq_max = 0L;
+        m_oAppStats.ids = 0L;
+        m_oAppStats.region_id = region_id;
+        m_oAppStats.worker_id = worker_id;
+        return 1;
+    }
+private:
+    snowflake_state m_oSnowflakeGlobalState;
+    app_stats       m_oAppStats;
+};
+
+
+CDMIDGenerator::CDMIDGenerator()
+    : m_oImpl(new CDMIDGeneratorImpl())
+{
 }
 
+CDMIDGenerator::~CDMIDGenerator()
+{
+}
+
+uint64_t CDMIDGenerator::GetNextID()
+{
+    return m_oImpl.GetNextID();
+}

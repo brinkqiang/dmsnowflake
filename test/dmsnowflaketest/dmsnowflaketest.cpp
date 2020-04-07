@@ -15,8 +15,6 @@ TEST(IdWorkerUnThreadSafe, IdWorkerUnThreadSafe) {
     }
 }
 
-
-
 TEST(IdWorkerThreadSafe, IdWorkerThreadSafe) {
     IdWorkerThreadSafe id(0, 0);
 

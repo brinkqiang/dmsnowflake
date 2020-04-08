@@ -1,18 +1,18 @@
 
-#include "dmsnowflake.hpp"
+#include "snowflake.hpp"
 
 #include "gtest.h"
 
 #include <unordered_set>
 
-TEST(CDMIDGenerator, CDMIDGenerator) {
-    CDMIDGenerator oID;
+TEST(id_generator, id_generator) {
+    id_generator id_gen;
 
     int c = 1000000;
     std::unordered_set<uint64_t> keys;
     for (int i = 0; i < c; ++i)
     {
-        uint64_t id = oID.GetNextID();
+        uint64_t id = id_gen.get_nextid();
 
         auto it = keys.find(id);
         ASSERT_TRUE(it == keys.end());

@@ -25,7 +25,7 @@
 #include <cstdint>
 #include <mutex>
 
-class CDMIDGeneratorImpl;
+class id_generator_impl;
 
 class CDMIDGenerator
 {
@@ -36,7 +36,7 @@ public:
 	uint64_t GetNextID();
 
 private:
-	std::unique_ptr< CDMIDGeneratorImpl> m_oImpl;
+	std::unique_ptr< id_generator_impl> m_oImpl;
 };
 
 #endif // __DMSNOWFLAKE_H_INCLUDE__

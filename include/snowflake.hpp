@@ -38,7 +38,7 @@ public:
 	uint64_t get_nextid();
 
 private:
-	std::unique_ptr< id_generator_impl> m_oImpl;
+	std::unique_ptr<id_generator_impl> m_oImpl;
 };
 
 #define SNOWFLAKE_EPOCH 1388534400000 //Midnight January 1, 2014

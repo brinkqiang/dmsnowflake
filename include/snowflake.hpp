@@ -41,8 +41,6 @@ private:
 	std::unique_ptr< id_generator_impl> m_oImpl;
 };
 
-
-// the timestamp in milliseconds of the start of the custom epoch
 #define SNOWFLAKE_EPOCH 1388534400000 //Midnight January 1, 2014
 
 #define SNOWFLAKE_TIME_BITS 41
@@ -51,7 +49,6 @@ private:
 #define SNOWFLAKE_SEQUENCE_BITS 8
 
 typedef struct {
-    // milliseconds since SNOWFLAKE_EPOCH
     uint64_t time;
     uint64_t seq_max;
     uint64_t worker_id;
@@ -97,7 +94,6 @@ private:
         uint64_t millisecs = snowflake_gettime();
         uint64_t id = 0;
 
-        // Catch NTP clock adjustment that rolls time backwards and sequence number overflow
         if ((snowflake_global_state.seq > snowflake_global_state.seq_max) || snowflake_global_state.time > millisecs) {
             ++app_stats.waits;
             while (snowflake_global_state.time >= millisecs) {
@@ -107,7 +103,7 @@ private:
 
         if (snowflake_global_state.time < millisecs) {
             snowflake_global_state.time = millisecs;
-            snowflake_global_state.seq = 0L;
+            snowflake_global_state.seq = 0ULL;
         }
 
 
@@ -144,14 +140,14 @@ private:
 
         snowflake_global_state.worker_id = worker_id;
         snowflake_global_state.region_id = region_id;
-        snowflake_global_state.seq_max = (1L << SNOWFLAKE_SEQUENCE_BITS) - 1;
-        snowflake_global_state.seq = 0L;
-        snowflake_global_state.time = 0L;
+        snowflake_global_state.seq_max = (1ULL << SNOWFLAKE_SEQUENCE_BITS) - 1;
+        snowflake_global_state.seq = 0ULL;
+        snowflake_global_state.time = 0ULL;
 
         app_stats.seq_cap = snowflake_global_state.seq_max;
-        app_stats.waits = 0L;
-        app_stats.seq_max = 0L;
-        app_stats.ids = 0L;
+        app_stats.waits = 0ULL;
+        app_stats.seq_max = 0ULL;
+        app_stats.ids = 0ULL;
         app_stats.region_id = region_id;
         app_stats.worker_id = worker_id;
         return 1;

@@ -23,7 +23,6 @@
 #include <chrono>
 #include <cassert>
 
-// the timestamp in milliseconds of the start of the custom epoch
 #define SNOWFLAKE_EPOCH 1388534400000 //Midnight January 1, 2014
 
 #define SNOWFLAKE_TIME_BITS 41
@@ -31,8 +30,7 @@
 #define SNOWFLAKE_WORKERID_BITS 10
 #define SNOWFLAKE_SEQUENCE_BITS 8
 
-typedef struct _snowflake_state {
-    // milliseconds since SNOWFLAKE_EPOCH
+typedef struct {
     uint64_t time;
     uint64_t seq_max;
     uint64_t worker_id;

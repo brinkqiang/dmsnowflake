@@ -22,7 +22,7 @@
 #ifndef __DMSNOWFLAKE_H_INCLUDE__
 #define __DMSNOWFLAKE_H_INCLUDE__
 
-#include <stdint.h>
+#include <cstdint>
 #include <mutex>
 
 class CDMIDGeneratorImpl;

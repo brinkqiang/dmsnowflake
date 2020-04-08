@@ -19,26 +19,26 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __DMSNOWFLAKE_H_INCLUDE__
-#define __DMSNOWFLAKE_H_INCLUDE__
+#ifndef __SNOWFLAKE_H_INCLUDE__
+#define __SNOWFLAKE_H_INCLUDE__
 
 #include <cstdint>
 #include <mutex>
 #include <chrono>
 #include <cassert>
 
-class CDMIDGeneratorImpl;
+class id_generator_impl;
 
-class CDMIDGenerator
+class id_generator
 {
 public:
-	CDMIDGenerator(int region_id = 0, int worker_id = 0);
-	~CDMIDGenerator();
+	id_generator(int region_id = 0, int worker_id = 0);
+	~id_generator();
 
-	uint64_t GetNextID();
+	uint64_t get_nextid();
 
 private:
-	std::unique_ptr< CDMIDGeneratorImpl> m_oImpl;
+	std::unique_ptr< id_generator_impl> m_oImpl;
 };
 
 
@@ -50,7 +50,7 @@ private:
 #define SNOWFLAKE_WORKERID_BITS 10
 #define SNOWFLAKE_SEQUENCE_BITS 8
 
-typedef struct _snowflake_state {
+typedef struct {
     // milliseconds since SNOWFLAKE_EPOCH
     uint64_t time;
     uint64_t seq_max;
@@ -62,7 +62,7 @@ typedef struct _snowflake_state {
     uint64_t worker_shift_bits;
 } snowflake_state;
 
-typedef struct _app_stats {
+typedef struct {
     time_t started_at;
     char* version;
     uint64_t ids;
@@ -73,53 +73,53 @@ typedef struct _app_stats {
     uint64_t seq_cap;
 } app_stats;
 
-static inline uint64_t DMGetTime() {
+static inline uint64_t snowflake_gettime() {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count() - SNOWFLAKE_EPOCH;
 }
 
-class CDMIDGeneratorImpl
+class id_generator_impl
 {
 public:
-    CDMIDGeneratorImpl(int region_id, int worker_id) { 
-        std::lock_guard guard(m_oLock);
+    id_generator_impl(int region_id, int worker_id) { 
+        std::lock_guard guard(lock);
         snowflake_init(region_id, worker_id);
     }
 
-    ~CDMIDGeneratorImpl() {}
+    ~id_generator_impl() {}
 
-    uint64_t GetNextID() {
-        std::lock_guard guard(m_oLock);
+    uint64_t get_nextid() {
+        std::lock_guard guard(lock);
         return snowflake_id();
     }
 
 private:
     uint64_t snowflake_id() {
-        uint64_t millisecs = DMGetTime();
+        uint64_t millisecs = snowflake_gettime();
         uint64_t id = 0;
 
         // Catch NTP clock adjustment that rolls time backwards and sequence number overflow
-        if ((m_oSnowflakeGlobalState.seq > m_oSnowflakeGlobalState.seq_max) || m_oSnowflakeGlobalState.time > millisecs) {
-            ++m_oAppStats.waits;
-            while (m_oSnowflakeGlobalState.time >= millisecs) {
-                millisecs = DMGetTime();
+        if ((snowflake_global_state.seq > snowflake_global_state.seq_max) || snowflake_global_state.time > millisecs) {
+            ++app_stats.waits;
+            while (snowflake_global_state.time >= millisecs) {
+                millisecs = snowflake_gettime();
             }
         }
 
-        if (m_oSnowflakeGlobalState.time < millisecs) {
-            m_oSnowflakeGlobalState.time = millisecs;
-            m_oSnowflakeGlobalState.seq = 0L;
+        if (snowflake_global_state.time < millisecs) {
+            snowflake_global_state.time = millisecs;
+            snowflake_global_state.seq = 0L;
         }
 
 
-        id = (millisecs << m_oSnowflakeGlobalState.time_shift_bits)
-            | (m_oSnowflakeGlobalState.region_id << m_oSnowflakeGlobalState.region_shift_bits)
-            | (m_oSnowflakeGlobalState.worker_id << m_oSnowflakeGlobalState.worker_shift_bits)
-            | (m_oSnowflakeGlobalState.seq++);
+        id = (millisecs << snowflake_global_state.time_shift_bits)
+            | (snowflake_global_state.region_id << snowflake_global_state.region_shift_bits)
+            | (snowflake_global_state.worker_id << snowflake_global_state.worker_shift_bits)
+            | (snowflake_global_state.seq++);
 
-        if (m_oAppStats.seq_max < m_oSnowflakeGlobalState.seq)
-            m_oAppStats.seq_max = m_oSnowflakeGlobalState.seq;
+        if (app_stats.seq_max < snowflake_global_state.seq)
+            app_stats.seq_max = snowflake_global_state.seq;
 
-        ++m_oAppStats.ids;
+        ++app_stats.ids;
         return id;
     }
 
@@ -138,44 +138,44 @@ private:
             return -1;
         }
 
-        m_oSnowflakeGlobalState.time_shift_bits = SNOWFLAKE_REGIONID_BITS + SNOWFLAKE_WORKERID_BITS + SNOWFLAKE_SEQUENCE_BITS;
-        m_oSnowflakeGlobalState.region_shift_bits = SNOWFLAKE_WORKERID_BITS + SNOWFLAKE_SEQUENCE_BITS;
-        m_oSnowflakeGlobalState.worker_shift_bits = SNOWFLAKE_SEQUENCE_BITS;
+        snowflake_global_state.time_shift_bits = SNOWFLAKE_REGIONID_BITS + SNOWFLAKE_WORKERID_BITS + SNOWFLAKE_SEQUENCE_BITS;
+        snowflake_global_state.region_shift_bits = SNOWFLAKE_WORKERID_BITS + SNOWFLAKE_SEQUENCE_BITS;
+        snowflake_global_state.worker_shift_bits = SNOWFLAKE_SEQUENCE_BITS;
 
-        m_oSnowflakeGlobalState.worker_id = worker_id;
-        m_oSnowflakeGlobalState.region_id = region_id;
-        m_oSnowflakeGlobalState.seq_max = (1L << SNOWFLAKE_SEQUENCE_BITS) - 1;
-        m_oSnowflakeGlobalState.seq = 0L;
-        m_oSnowflakeGlobalState.time = 0L;
+        snowflake_global_state.worker_id = worker_id;
+        snowflake_global_state.region_id = region_id;
+        snowflake_global_state.seq_max = (1L << SNOWFLAKE_SEQUENCE_BITS) - 1;
+        snowflake_global_state.seq = 0L;
+        snowflake_global_state.time = 0L;
 
-        m_oAppStats.seq_cap = m_oSnowflakeGlobalState.seq_max;
-        m_oAppStats.waits = 0L;
-        m_oAppStats.seq_max = 0L;
-        m_oAppStats.ids = 0L;
-        m_oAppStats.region_id = region_id;
-        m_oAppStats.worker_id = worker_id;
+        app_stats.seq_cap = snowflake_global_state.seq_max;
+        app_stats.waits = 0L;
+        app_stats.seq_max = 0L;
+        app_stats.ids = 0L;
+        app_stats.region_id = region_id;
+        app_stats.worker_id = worker_id;
         return 1;
     }
 private:
-    snowflake_state m_oSnowflakeGlobalState;
-    app_stats       m_oAppStats;
-    std::mutex      m_oLock;
+    snowflake_state snowflake_global_state;
+    app_stats       app_stats;
+    std::mutex      lock;
 };
 
 
-CDMIDGenerator::CDMIDGenerator(int region_id, int worker_id)
-    : m_oImpl(new CDMIDGeneratorImpl(region_id, worker_id))
+id_generator::id_generator(int region_id, int worker_id)
+    : m_oImpl(new id_generator_impl(region_id, worker_id))
 {
 
 }
 
-CDMIDGenerator::~CDMIDGenerator()
+id_generator::~id_generator()
 {
 }
 
-uint64_t CDMIDGenerator::GetNextID()
+uint64_t id_generator::get_nextid()
 {
-    return m_oImpl->GetNextID();
+    return m_oImpl->get_nextid();
 }
 
-#endif // __DMSNOWFLAKE_H_INCLUDE__
+#endif // __SNOWFLAKE_H_INCLUDE__

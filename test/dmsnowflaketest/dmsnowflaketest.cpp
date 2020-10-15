@@ -12,7 +12,7 @@
 int gen_count = 1000000;
 
 TEST(dmsnowflake_h, dmsnowflake_h) {
-	CDMIDGenerator id_gen;
+	CDMIDGenerator id_gen(0, 0);
 
 	std::unordered_set<uint64_t> keys;
 	for (int i = 0; i < gen_count; ++i)
@@ -27,7 +27,7 @@ TEST(dmsnowflake_h, dmsnowflake_h) {
 
 
 TEST(snowflake_hpp, snowflake_hpp) {
-    id_generator id_gen;
+    id_generator id_gen(0, 0);
 
     std::unordered_set<uint64_t> keys;
     for (int i = 0; i < gen_count; ++i)

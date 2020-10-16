@@ -24,6 +24,7 @@
 
 #include <cstdint>
 #include <mutex>
+#include <memory>
 #include <chrono>
 #include <cassert>
 

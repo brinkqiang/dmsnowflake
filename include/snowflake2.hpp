@@ -26,6 +26,7 @@
 #include <chrono>
 #include <stdexcept>
 #include <mutex>
+#include <memory>
 
 class snowflake_nonlock
 {

@@ -96,7 +96,7 @@ private:
         uint64_t id = 0;
 
         if ((snowflake_global_state.seq > snowflake_global_state.seq_max) || snowflake_global_state.time > millisecs) {
-            ++app_stats.waits;
+            ++stats.waits;
             while (snowflake_global_state.time >= millisecs) {
                 millisecs = snowflake_gettime();
             }
@@ -113,10 +113,10 @@ private:
             | (snowflake_global_state.worker_id << snowflake_global_state.worker_shift_bits)
             | (snowflake_global_state.seq++);
 
-        if (app_stats.seq_max < snowflake_global_state.seq)
-            app_stats.seq_max = snowflake_global_state.seq;
+        if (stats.seq_max < snowflake_global_state.seq)
+            stats.seq_max = snowflake_global_state.seq;
 
-        ++app_stats.ids;
+        ++stats.ids;
         return id;
     }
 
@@ -145,17 +145,17 @@ private:
         snowflake_global_state.seq = 0ULL;
         snowflake_global_state.time = 0ULL;
 
-        app_stats.seq_cap = snowflake_global_state.seq_max;
-        app_stats.waits = 0ULL;
-        app_stats.seq_max = 0ULL;
-        app_stats.ids = 0ULL;
-        app_stats.region_id = region_id;
-        app_stats.worker_id = worker_id;
+        stats.seq_cap = snowflake_global_state.seq_max;
+        stats.waits = 0ULL;
+        stats.seq_max = 0ULL;
+        stats.ids = 0ULL;
+        stats.region_id = region_id;
+        stats.worker_id = worker_id;
         return 1;
     }
 private:
     snowflake_state snowflake_global_state;
-    app_stats       app_stats;
+    app_stats       stats;
     std::mutex      lock;
 };
 

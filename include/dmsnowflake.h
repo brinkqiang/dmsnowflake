@@ -28,6 +28,15 @@
 
 class CDMIDGeneratorImpl;
 
+#define SNOWFLAKE_TIME_BITS 41
+#define SNOWFLAKE_REGIONID_BITS 4
+#define SNOWFLAKE_WORKERID_BITS 10
+#define SNOWFLAKE_SEQUENCE_BITS 8
+
+constexpr int max_region_id = (1 << SNOWFLAKE_REGIONID_BITS) - 1;
+
+constexpr int max_worker_id = (1 << SNOWFLAKE_WORKERID_BITS) - 1;
+
 class CDMIDGenerator
 {
 public:

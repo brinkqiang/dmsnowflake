@@ -24,6 +24,7 @@
 
 #include <cstdint>
 #include <mutex>
+#include <memory>
 
 class CDMIDGeneratorImpl;
 

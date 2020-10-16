@@ -60,14 +60,14 @@ class CDMIDGeneratorImpl
 {
 public:
     CDMIDGeneratorImpl(int region_id, int worker_id) { 
-        std::lock_guard guard(m_oLock);
+        std::lock_guard<std::mutex> guard(m_oLock);
         snowflake_init(region_id, worker_id);
     }
 
     ~CDMIDGeneratorImpl() {}
 
     uint64_t GetNextID() {
-        std::lock_guard guard(m_oLock);
+        std::lock_guard<std::mutex> guard(m_oLock);
         return snowflake_id();
     }
 

@@ -79,14 +79,14 @@ class id_generator_impl
 {
 public:
     id_generator_impl(int region_id, int worker_id) { 
-        std::lock_guard guard(lock);
+        std::lock_guard<std::mutex> guard(lock);
         snowflake_init(region_id, worker_id);
     }
 
     ~id_generator_impl() {}
 
     uint64_t get_nextid() {
-        std::lock_guard guard(lock);
+        std::lock_guard<std::mutex> guard(lock);
         return snowflake_id();
     }
 

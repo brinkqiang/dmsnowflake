@@ -1,5 +1,4 @@
 
-#include "snowflake.hpp"
 #include "dmsnowflake.h"
 
 #include "gtest.h"

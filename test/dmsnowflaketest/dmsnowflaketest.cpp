@@ -1,13 +1,10 @@
 
 #include "snowflake.hpp"
-
-#include "snowflake2.hpp"
 #include "dmsnowflake.h"
 
 #include "gtest.h"
 
 #include <unordered_set>
-#include <mutex>
 
 int gen_count = 1000000;
 

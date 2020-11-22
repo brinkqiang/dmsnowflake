@@ -152,6 +152,11 @@ CDMIDGenerator::~CDMIDGenerator()
 {
 }
 
+void CDMIDGenerator::Init(int region_id, int worker_id) 
+{
+	m_oImpl.reset(new CDMIDGeneratorImpl(region_id, worker_id));
+}
+
 uint64_t CDMIDGenerator::GetNextID()
 {
     return m_oImpl->GetNextID();

@@ -33,10 +33,12 @@ public:
 	CDMIDGenerator(int region_id = 0, int worker_id = 0);//region_id in (0-15) , worker_id in (0-1023)
 	~CDMIDGenerator();
 
+	void Init(int region_id = 0, int worker_id = 0);
 	uint64_t GetNextID();
 
 private:
 	std::unique_ptr<CDMIDGeneratorImpl> m_oImpl;
 };
+
 
 #endif // __DMSNOWFLAKE_H_INCLUDE__

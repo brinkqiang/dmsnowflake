@@ -19,4 +19,5 @@ TEST(dmsnowflake_h, dmsnowflake_h) {
 		ASSERT_TRUE(it == keys.end());
 		keys.insert(id);
 	}
+	ASSERT_TRUE(keys.size() == gen_count);
 }

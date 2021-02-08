@@ -19,8 +19,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-#ifndef __DMSNOWFLAKE_H_INCLUDE__
-#define __DMSNOWFLAKE_H_INCLUDE__
+#ifndef __DMSNOWFLAKE_HPP_INCLUDE__
+#define __DMSNOWFLAKE_HPP_INCLUDE__
 
 #include <cstdint>
 #include <mutex>
@@ -182,4 +182,4 @@ uint64_t CDMIDGenerator::GetNextID()
     return m_oImpl->GetNextID();
 }
 
-#endif // __DMSNOWFLAKE_H_INCLUDE__
+#endif // __DMSNOWFLAKE_HPP_INCLUDE__

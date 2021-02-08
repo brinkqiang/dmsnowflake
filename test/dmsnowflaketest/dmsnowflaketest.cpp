@@ -1,5 +1,5 @@
 
-#include "dmsnowflake.h"
+#include "dmsnowflake.hpp"
 
 #include "gtest.h"
 

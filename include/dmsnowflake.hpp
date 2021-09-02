@@ -30,11 +30,11 @@ class CDMIDGeneratorImpl;
 class CDMIDGenerator
 {
 public:
-	CDMIDGenerator(int region_id = 0, int worker_id = 0);//region_id in (0-15) , worker_id in (0-1023)
-	~CDMIDGenerator();
+	inline CDMIDGenerator(int region_id = 0, int worker_id = 0);//region_id in (0-15) , worker_id in (0-1023)
+	inline ~CDMIDGenerator();
 
-	void Init(int region_id = 0, int worker_id = 0);
-	uint64_t GetNextID();
+	inline void Init(int region_id = 0, int worker_id = 0);
+	inline uint64_t GetNextID();
 
 private:
 	std::unique_ptr<CDMIDGeneratorImpl> m_oImpl;
@@ -79,20 +79,20 @@ static inline uint64_t DMGetTime() {
 class CDMIDGeneratorImpl
 {
 public:
-    CDMIDGeneratorImpl(int region_id, int worker_id) { 
+    inline CDMIDGeneratorImpl(int region_id, int worker_id) { 
         std::lock_guard<std::mutex> guard(m_oLock);
         snowflake_init(region_id, worker_id);
     }
 
-    ~CDMIDGeneratorImpl() {}
+    inline ~CDMIDGeneratorImpl() {}
 
-    uint64_t GetNextID() {
+    inline uint64_t GetNextID() {
         std::lock_guard<std::mutex> guard(m_oLock);
         return snowflake_id();
     }
 
 private:
-    uint64_t snowflake_id() {
+    inline uint64_t snowflake_id() {
         uint64_t millisecs = DMGetTime();
         uint64_t id = 0;
 
@@ -122,8 +122,7 @@ private:
         return id;
     }
 
-
-    int snowflake_init(int region_id, int worker_id) {
+    inline int snowflake_init(int region_id, int worker_id) {
         const int max_region_id = (1 << SNOWFLAKE_REGIONID_BITS) - 1;
         if (region_id < 0 || region_id > max_region_id) {
             printf("Region ID must be in the range : 0-%d\n", max_region_id);
@@ -162,22 +161,22 @@ private:
 };
 
 
-CDMIDGenerator::CDMIDGenerator(int region_id, int worker_id)
+inline CDMIDGenerator::CDMIDGenerator(int region_id, int worker_id)
     : m_oImpl(new CDMIDGeneratorImpl(region_id, worker_id))
 {
 
 }
 
-CDMIDGenerator::~CDMIDGenerator()
+inline CDMIDGenerator::~CDMIDGenerator()
 {
 }
 
-void CDMIDGenerator::Init(int region_id, int worker_id) 
+inline void CDMIDGenerator::Init(int region_id, int worker_id) 
 {
 	m_oImpl.reset(new CDMIDGeneratorImpl(region_id, worker_id));
 }
 
-uint64_t CDMIDGenerator::GetNextID()
+inline uint64_t CDMIDGenerator::GetNextID()
 {
     return m_oImpl->GetNextID();
 }

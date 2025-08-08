@@ -1,14 +1,10 @@
 
-rem - clone code
-rem git clone https://github.com/brinkqiang/dmsnowflake.git
-rem pushd dmsnowflake
-rem git submodule update --init --recursive
-
 rmdir /S /Q build
-mkdir build
-pushd build
+mkdir build 2> nul
+cd build
+
 cmake -A x64 -DCMAKE_BUILD_TYPE=relwithdebinfo ..
-cmake --build . --config relwithdebinfo
-popd
+cmake --build . --config relwithdebinfo -- /m:%NUMBER_OF_PROCESSORS%
+cd ..
 
 rem pause
